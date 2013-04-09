@@ -51,4 +51,5 @@ The code in this example is sufficient to bind a model to Google Contact::
     
     contact_observer = ContactObserver(email=settings.CONTACT_EMAIL,
                                        password=settings.CONTACT_PASSWORD)
-                                                                         contact_observer.observe(Client, ClientAdapter())
+    
+    contact_observer.observe(Client, ClientAdapter())
