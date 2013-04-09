@@ -40,7 +40,16 @@ The code in this example is sufficient to bind a model to Google Contact::
             email = instance.email
             first_name = instance.first
             last_name = instance.last
-            return ContactData(email, first_name, last_name)
+            address = instance.address
+            city = instance.city
+            state = instance.state
+            zipcode = instance.zipcode
+            cell_phone = instance.cellphone
+            home_phone = instance.homephone
+            work_phone = instance.busphone
+            fax = instance.faxphone
+            primary_phone = instance.bestphone
+            return ContactData(email, first_name, last_name, address, city, state, zipcode, home_phone, cell_phone, work_phone, fax, primary_phone=primary_phone)
 
         def get_feed_url(self, instance):
             """

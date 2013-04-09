@@ -5,7 +5,7 @@ djangogcontact.adapter
 """
 
 from atom.data import Content, Title
-from gdata.data import Email, Name, GivenName, FamilyName, MAIN_REL, HOME_REL
+from gdata.data import Email, Name, GivenName, FamilyName, WORK_REL, OTHER_REL, MOBILE_REL, HOME_REL, FAX_REL, PhoneNumber, StructuredPostalAddress, Street, City, Region, Postcode, Country
 
 class ContactData(object):
     """
@@ -13,13 +13,22 @@ class ContactData(object):
     objects which can be transmitted to Google services.
     """
     
-    def __init__(self, email, first_name, last_name):
+    def __init__(self, email, first_name, last_name, address, city, state, zipcode, home_phone, cell_phone, work_phone, fax, primary_phone=None):
         """
         Instantiates a new instance of ContactData.
         """
         self.email = email
         self.first_name = first_name
         self.last_name = last_name
+        self.address = address
+        self.city = city
+        self.state = state
+        self.zipcode = zipcode
+        self.cell_phone = cell_phone
+        self.home_phone = home_phone
+        self.work_phone = work_phone
+        self.fax = fax
+        self.primary_phone = primary_phone
     
     def populate_contact(self, contact):
         """
@@ -28,6 +37,40 @@ class ContactData(object):
 
         contact.email = [Email(address=self.email, primary='true', rel=HOME_REL)]
         contact.name = Name(given_name=GivenName(text=self.first_name), family_name=FamilyName(text=self.last_name))
+        phone_list = []
+        PHONE_RELS = [
+            (self.cell_phone, MOBILE_REL),
+            (self.home_phone, HOME_REL),
+            (self.work_phone, WORK_REL),
+            (self.fax, FAX_REL),
+            (self.primary_phone, OTHER_REL)
+        ]
+
+        primary = 'false'
+        for phone in PHONE_RELS:
+            if phone[0]:
+                if phone[0] == self.primary_phone and primary == 'false':
+                    primary = 'true'
+                    PHONE_RELS.pop()
+                phone_list.append(PhoneNumber(text=phone[0], rel=phone[1],
+                                              primary=primary))
+
+        if phone_list:
+            contact.phone_number = phone_list
+
+        contact.structured_postal_address = [
+            StructuredPostalAddress(
+                rel = HOME_REL,
+                primary = 'true',
+                city = City(text=self.city),
+                country = Country(text='USA'),
+                postcode = Postcode(text=self.zipcode),
+                street = Street(text=self.address),
+                region = Region(text=self.state)
+            )
+        ]
+
+
 
 class ContactAdapter(object):
     """

@@ -102,7 +102,7 @@ class ContactObserver(object):
             else:
                 new_contact = client.CreateContact(contact, insert_uri=feed)
                 Contact.objects.set_contact_id(instance, feed,
-                                                   new_contact.get_edit_link().href)
+                                               new_contact.get_edit_link().href)
     
     def delete(self, sender, instance):
         """
