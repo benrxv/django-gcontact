@@ -6,6 +6,7 @@ djangogcontact.adapter
 
 from atom.data import Content, Title
 from gdata.data import Email, Name, GivenName, FamilyName, WORK_REL, OTHER_REL, MOBILE_REL, HOME_REL, FAX_REL, PhoneNumber, StructuredPostalAddress, Street, City, Region, Postcode, Country
+from gdata.contacts.data import GroupMembershipInfo
 
 class ContactData(object):
     """
@@ -13,7 +14,7 @@ class ContactData(object):
     objects which can be transmitted to Google services.
     """
     
-    def __init__(self, email, first_name, last_name, address, city, state, zipcode, home_phone, cell_phone, work_phone, fax, primary_phone=None):
+    def __init__(self, email, first_name, last_name, address, city, state, zipcode, home_phone, cell_phone, work_phone, fax, primary_phone=None, group_url=None):
         """
         Instantiates a new instance of ContactData.
         """
@@ -29,29 +30,38 @@ class ContactData(object):
         self.work_phone = work_phone
         self.fax = fax
         self.primary_phone = primary_phone
-    
+        self.group_url = group_url
+
     def populate_contact(self, contact):
         """
         Populates the parameters of a Google Contacts entry object.
         """
 
-        contact.email = [Email(address=self.email, primary='true', rel=HOME_REL)]
+        email_addresses = [e.address for e in contact.email]
+        if self.email and self.email not in email_addresses:
+            if not email_addresses:
+                primary = 'true'
+            else:
+                primary = 'false'
+            contact.email.append(Email(address=self.email, primary=primary, rel=OTHER_REL))
+
         contact.name = Name(given_name=GivenName(text=self.first_name), family_name=FamilyName(text=self.last_name))
         phone_list = []
         PHONE_RELS = [
-            (self.cell_phone, MOBILE_REL),
-            (self.home_phone, HOME_REL),
-            (self.work_phone, WORK_REL),
-            (self.fax, FAX_REL),
-            (self.primary_phone, OTHER_REL)
+            (self.cell_phone, MOBILE_REL, 'false'),
+            (self.home_phone, HOME_REL, 'false'),
+            (self.work_phone, WORK_REL, 'false'),
+            (self.fax, FAX_REL, 'false'),
+            (self.primary_phone, OTHER_REL, 'true')
         ]
 
-        primary = 'false'
         for phone in PHONE_RELS:
             if phone[0]:
-                if phone[0] == self.primary_phone and primary == 'false':
+                if phone[0] == self.primary_phone:
                     primary = 'true'
                     PHONE_RELS.pop()
+                else:
+                    primary = phone[2]
                 phone_list.append(PhoneNumber(text=phone[0], rel=phone[1],
                                               primary=primary))
 
@@ -70,7 +80,8 @@ class ContactData(object):
             )
         ]
 
-
+        if self.group_url and not any([g for g in contact.group_membership_info if g.href == self.group_url]):    
+            contact.group_membership_info.append(GroupMembershipInfo(href=self.group_url))
 
 class ContactAdapter(object):
     """

@@ -6,7 +6,7 @@ djangogcontact.observer
 
 from django.db.models import signals
 from gdata.contacts.data import ContactEntry
-from gdata.contacts.client import ContactsClient
+from gdata.contacts.client import ContactsClient, ContactsQuery
 
 from models import Contact
 
@@ -83,7 +83,17 @@ class ContactObserver(object):
         try:
             contact = client.GetContact(contact_id)
         except Exception:
+            # See if this email address is already in a Google Contact
+            # that isn't already sync'd
             contact = None
+            query = ContactsQuery()
+            query.text_query = instance.email
+            contact_list = client.GetContacts(q=query).entry
+            if len(contact_list) == 1:
+                if any(True for email in contact_list[0].email if email.address == instance.email):
+                    contact = contact_list[0]
+                    Contact.objects.set_contact_id(instance, feed,
+                                                   contact.get_edit_link().href)
         return contact
     
     def update(self, sender, instance):
