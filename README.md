@@ -4,6 +4,11 @@ djangogcontact
 
 A Django application allowing developers to synchronise instances of their models with Google Contacts. Using Django's signals mechanism and generic relations, no changes to the model being synchronised are required, and synchronisation occurs without user intervention over the models lifecycle.
 
+WARNING!
+========
+
+This project performs a ONE-WAY sync.  If it matches exisiting instance's email address to one (and only one) on Google Contacts, it will overwrite!  
+
 Usage
 =====
 
@@ -49,7 +54,7 @@ The code in this example is sufficient to bind a model to Google Contact::
             work_phone = instance.busphone
             fax = instance.faxphone
             primary_phone = instance.bestphone
-            return ContactData(email, first_name, last_name, address, city, state, zipcode, home_phone, cell_phone, work_phone, fax, primary_phone=primary_phone)
+            return ContactData(email, first_name, last_name, address, city, state, zipcode, home_phone, cell_phone, work_phone, fax, primary_phone=primary_phone, group_url=None)
 
         def get_feed_url(self, instance):
             """
