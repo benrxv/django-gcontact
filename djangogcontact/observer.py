@@ -70,7 +70,7 @@ class ContactObserver(object):
         """
         Called by Django's signal mechanism when an observed model is deleted.
         """
-        self.delete(self, kwargs['sender'], kwargs['instance'])
+        self.delete.delay(self, kwargs['sender'], kwargs['instance'])
     
     def get_client(self):
         """
