@@ -4,11 +4,20 @@ djangogcontact.observer
 
 """
 
+from celery.task import task
 from django.db.models import signals
 from gdata.contacts.data import ContactEntry
 from gdata.contacts.client import ContactsClient, ContactsQuery
 
 from models import Contact
+
+# # From: http://dougalmatthews.com/2011/10/10/making-django's-signals-asynchronous-with-celery/ , but didn't seem to need this patch
+# # Warning. Monkey patch.
+# from django.dispatch.dispatcher import Signal
+# def reducer(self):
+#     return (Signal, (self.providing_args,))
+# Signal.__reduce__ = reducer
+
 
 class ContactObserver(object):
     """
@@ -55,13 +64,13 @@ class ContactObserver(object):
         """
         Called by Django's signal mechanism when an observed model is updated.
         """
-        self.update(kwargs['sender'], kwargs['instance'])
+        self.update.delay(self, kwargs['sender'], kwargs['instance'])
     
     def on_delete(self, **kwargs):
         """
         Called by Django's signal mechanism when an observed model is deleted.
         """
-        self.delete(kwargs['sender'], kwargs['instance'])
+        self.delete(self, kwargs['sender'], kwargs['instance'])
     
     def get_client(self):
         """
@@ -96,6 +105,7 @@ class ContactObserver(object):
                                                    contact.get_edit_link().href)
         return contact
     
+    @task
     def update(self, sender, instance):
         """
         Update or create an entry in Google Calendar for the given instance
@@ -114,6 +124,7 @@ class ContactObserver(object):
                 Contact.objects.set_contact_id(instance, feed,
                                                new_contact.get_edit_link().href)
     
+    @task
     def delete(self, sender, instance):
         """
         Delete the entry in Google Calendar corresponding to the given instance
