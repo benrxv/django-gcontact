@@ -105,7 +105,7 @@ class ContactObserver(object):
                                                    contact.get_edit_link().href)
         return contact
     
-    @task
+    @task(ignore_result=True)
     def update(self, sender, instance):
         """
         Update or create an entry in Google Calendar for the given instance
@@ -124,7 +124,7 @@ class ContactObserver(object):
                 Contact.objects.set_contact_id(instance, feed,
                                                new_contact.get_edit_link().href)
     
-    @task
+    @task(ignore_result=True)
     def delete(self, sender, instance):
         """
         Delete the entry in Google Calendar corresponding to the given instance
