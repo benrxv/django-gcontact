@@ -54,14 +54,15 @@ class ContactData(object):
             (self.fax, FAX_REL, 'false'),
             (self.primary_phone, OTHER_REL, 'true')
         ]
-
+        phones_added = []
         for phone in PHONE_RELS:
-            if phone[0]:
+            if phone[0] and phone[0] not in phones_added:
                 if phone[0] == self.primary_phone:
                     primary = 'true'
                     PHONE_RELS.pop()
                 else:
                     primary = phone[2]
+                phones_added.append(phone[0])
                 phone_list.append(PhoneNumber(text=phone[0], rel=phone[1],
                                               primary=primary))
 
